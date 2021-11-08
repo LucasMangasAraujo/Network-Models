@@ -1,0 +1,27 @@
+%% CODE TO PREPROCESS TRELOAR DATA
+clc;close all; clear all
+
+%% OPEN FILES
+% Uniaxial data
+TRELOARUNI=load('TRELOARUNI.txt');
+ENGUNI=load('BOOKUNI.txt');
+
+% Allocate
+TSTRETCH=TRELOARUNI(:,1); TSTRES=TRELOARUNI(:,2);
+BSTRAIN=ENGUNI(:,1);      BSTRES=ENGUNI(:,2);
+
+%% TRANSFORM DATA
+N=length(TSTRETCH);
+
+TRELOARENGTRAIN=zeros(N,1);
+
+for I=1:N
+    TRELOARENGTRAIN(I)=TSTRETCH(I)-1.0;
+end
+
+
+%% PLOT
+figure(1)
+plot(BSTRAIN,BSTRES,'r--o');
+hold on
+plot(TRELOARENGTRAIN,TSTRES,'b--o');
