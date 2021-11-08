@@ -7,12 +7,17 @@
 """ SUGAUSS: THIS FUNCTION COMPUTES THE NOMINAL STRESS FOR A GIVEN LOAD CONDITION CONDERING
 GAUSS MODEL
 
-Inputs:
+Inputs: 
+		LOADTYPE: String with the laoding partition
+		RPROPS: Real array or sclar with material properties
+		STRETCH: Stretch
+		NSTRES: Integer with nunber of stress components
  			
 ******************
 
- Outputs:
- 
+ Outputs:	
+		NOMSTRES: First entry of the Firt Piola Stress tensor
+		
  
 ******************
 """
@@ -151,5 +156,22 @@ def GAUSS(LOADTYPE,RPROPS,STRETCH,NSTRES):
   
 	return NOMSTRES
   
+ #======================================================================================
+""" 3CHAIN: THIS FUNCTION COMPUTES THE NOMINAL STRESS FOR A GIVEN LOAD CONDITION CONDERING
+3 CHAIN MODEL
+
+Inputs: 
+		LOADTYPE: String with the laoding partition
+		RPROPS: Real array or sclar with material properties
+		STRETCH: Stretch
+		NSTRES: Integer with nunber of stress components
+ 			
+******************
+
+ Outputs:	
+		NOMSTRES: First entry of the Firt Piola Stress tensor
+		
  
+******************
+"""
  
