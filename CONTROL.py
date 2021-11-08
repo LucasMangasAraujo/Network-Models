@@ -89,11 +89,14 @@ elif(LOADTYPE=='BIAXIAL'):
     NOMSTRESS=R0;
     if(MODEL=='GAUSS'):
 					OUT=open('BIGAUSS.txt','w+')
+	elif(MODEL=='3CHAIN'):
+					OUT=open('BI3CHAIN.txt','w+')
 elif(LOADTYPE=='SHEAR'):
     NOMSTRES=R0;
     if(MODEL=='GAUSS'):
 					OUT=open('SHEARGAUSS.txt','w+')
-					
+	elif(MODEL=='3CHAIN'):
+					OUT=open('SHEAR3CHAIN.txt','w+')				
     
     
 # Run Loop
