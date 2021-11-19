@@ -2,19 +2,16 @@
 """"Incompressebility is assumed in this code"""
 #===================================================================
 ## IMPORT BUILT IN MODULES
+from math import *
 import numpy as np
-import matplotlib.pylab as plt
+import sys, os
+import seaborn as sns
+import pandas as p
 
 #===================================================================
 ## IMPORT USER DEFINED FUNCTIONS
-from PREFUN import*
+from UTILS import*
 from INTERFACE import MATISU
-
-
-#===================================================================
-## OPEN INPUT FILES
-PROPFILE=open('PROP.txt','r')
-
 
 #===================================================================
 ## VARIABLES DECLARATIONS
@@ -23,101 +20,95 @@ PROPFILE=open('PROP.txt','r')
 R0=float(0.0); R1=float(1.0);
 
 # Strings
-MODEL=str(''); LOAD=str('') 
+MODEL = str(''); LOAD = str('') 
 
 # Integers
-I=int(0); J=int(0); NINCR=int(R0); NPROP=int(R0); NSTRES=int(R0);
+I = int(0); J = int(0); NINCR = int(R0); NPROP = int(R0); NSTRES = int(R0);
 
 # Scalars
-LAMBDA=R0; 
-
-# Vectors
+LAMBDA = R0; STRETCHINCR = R0;
 
 
 # Second Order Tensors
-DEFGRAD=np.zeros((3,1),float);
+T = np.zeros((3,3),float); TR = np.zeros((3,3),float);
 
 
 # Unkowns a priori
-RPROP=[]; ETOT=[]; STRETCH=[];
+RPROP = []; ETOT = []; STRETCH = [];
 
 #===================================================================
 ## GET MATERIAL PROPERTIES
 
-# Ask which model will be uses
-MODEL=input('Which Network Model?\n')
-#MODEL='GAUSS' # Testing Code
+# Set INPUT file name
+INPUT = 'PARAMETERS.txt'
 
-# Check Model: Call MATPROP
-RPROPS=MATPROP(PROPFILE,MODEL)
+# Call MATPROP to assemble Material Model and loading conditions
+(RPROPS,MODEL,LOADTYPE,NINCR,STRETCHINCR) = MATPROP(INPUT)
 
-# Close File
-PROPFILE.close()
+
 
 #===================================================================
-## ASSEMBLE LOADING CONDITIONS
+## Assemble loading histoty
 
-# Ask Loading Conditions if Needed
-LOADTYPE=input('Which Loading Condition?\n ')
-#LOADTYPE='UNIAXIAL'; # Testing the code
+# Initialize
+STRETCH = np.zeros((NINCR+1,),float);
 
-# Ask Numbe of Increments
-NINCR=int(eval(input('Numer of Increments:\n')))
-#NINCR=100; # Default Value for Testing Code
+# Assemble
+for I in range(0,NINCR+1):
+	if (I == 0):
+		STRETCH[I] = R1;
+	else:
+		STRETCH[I] = STRETCH[I-1]+STRETCHINCR;
 
-# Targe Deformation
-LAMBDA=int(eval(input('Target Stretch:\n ')));
 
-# Call Loading Fuction
+#===================================================================
+## INITIALIZE THE OUTPUT FILES
 
-ETOT=LOADING(LOADTYPE, MODEL,NINCR,LAMBDA);
+# Dummy output file, equal for all cases
+DUMMYFILE = open('out.txt','w+')
 
+# Based on the Input File, create the specific output file
+EXT = '.txt'; # File Extension
+
+if (LOADTYPE == 'UNIAXIAL'):
+	OUT = 'UNI' + MODEL + EXT;
+elif (LOADTYPE == 'BIAXIAL'):
+	OUT = 'BI' + MODEL + EXT;
+elif (LOADTYPE == 'SHEAR'):
+	OUT = 'SHEAR' + MODEL + EXT;
+		
 #===================================================================
 ## STATE UPDATE
 
-# Assemble Nominal Stress array
-
-if(LOADTYPE=='UNIAXIAL'):
-    NSTRES=1; #
-    NOMSTRES=R0;
-    if(MODEL=='GAUSS'):
-					OUT=open('UNIGAUSS.txt','w+')
-    elif(MODEL=='3CHAIN'):
-					OUT=open('UNI3CHAIN.txt','w+')
-					
-elif(LOADTYPE=='BIAXIAL'):
-    NOMSTRESS=R0;
-    if(MODEL=='GAUSS'):
-					OUT=open('BIGAUSS.txt','w+')
-	elif(MODEL=='3CHAIN'):
-					OUT=open('BI3CHAIN.txt','w+')
-elif(LOADTYPE=='SHEAR'):
-    NOMSTRES=R0;
-    if(MODEL=='GAUSS'):
-					OUT=open('SHEARGAUSS.txt','w+')
-	elif(MODEL=='3CHAIN'):
-					OUT=open('SHEAR3CHAIN.txt','w+')				
-    
-    
-# Run Loop
 # Print the initial point
-OUT.write('{:2.4f} {:3.4f}'.format(ETOT[0],R0))
-OUT.write('\n')
-STRETCH=R0
+DUMMYFILE.write('{:2.4f} {:3.4f} {:3.4f}'.format(STRETCH[0],R0,R0))
+DUMMYFILE.write('\n')
+
+# Run Loop
 for I in range(1,NINCR+1):
-	STRETCH=ETOT[I];
-	NOMSTRES=MATISU(LOADTYPE,MODEL,RPROPS,STRETCH,NSTRES);
+	# Call State Update functions
+	TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I]);
 		
 	# Print on output file
-	OUT.write('{:2.4f} {:3.4f}'.format(STRETCH,NOMSTRES))
-	OUT.write('\n')
+	DUMMYFILE.write('{:2.4f} {:3.4f} {:3.4f}'.format(STRETCH[I],TR[0,0],T[0,0]))
+	DUMMYFILE.write('\n')
 	#ENDFOR
 # ENDIF		    
-#===================================================================
-## Close File
-OUT.close()
 
-		
+#===================================================================
+## COPY SDUMMY FILE TO SPECIFIC OUTPUT FILE 
+
+# Close file
+DUMMYFILE.close()
+
+# Copy and Move file to proper folder
+os.system('copy out.txt %s' %OUT) # Copy file
+if (MODEL == 'GAUSS'):
+	os.system('move %s Gaussian' %OUT);
+elif (MODEL == '3CHAIN'):
+	os.system('move %s 3Chain' %OUT);
+elif (MODEL == '8CHAIN'):
+	os.system('move %s 8Chain' %OUT);
 
 		
 
