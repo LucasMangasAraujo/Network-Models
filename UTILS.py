@@ -4,6 +4,7 @@
 # Import relavant modules
 import numpy as np
 from math import *
+import sys, os
 
 #======================================================================================
 ''' MATPROP: THIS FUNCTION ASSEMBLE ARRAY OR SCALAR CARRYING THE MATERIAL PROPERTIES
@@ -14,6 +15,10 @@ Inputs:
 Outputs:
 		RPROP: Array or scalar containing the material properties
 		MODEL: STRING CONTANING THE MODEL IDENTIFIER
+		LOADTYPE: String with the loading condition
+		NINCR: Numer of increments
+		STRETCHINCR: Delta stretch
+		QUADSCHEME: Particular integration scheme to be used
 		
 		
 '''
@@ -24,7 +29,7 @@ def MATPROP(INFILE):
 	R0 = float(0.0); R1 = float(1.0)
 	
 	# Strings:
-	DUMMY = str(); MODEL = str(); LOADTYPE = str();
+	DUMMY = str(); MODEL = str(); LOADTYPE = str(); QUADSCHEME = str();
 	
 	# Integers
 	I = int()
@@ -65,7 +70,11 @@ def MATPROP(INFILE):
 		RPROP = np.zeros((len(DATA),),float)
 		for I in range(0,len(DATA)):
 			RPROP[I] = float(DATA[I]);
-		
+	elif(MODEL == 'FULL'): # Full-Network Model
+		RPROP = np.zeros((len(DATA),),float)
+		for I in range(0,len(DATA)):
+			RPROP[I] = float(DATA[I]);
+			
 	#-----------------------------------------------------------------------------------
 	# Number of increments and Target Stretch
 	FILE.readline();
@@ -76,10 +85,16 @@ def MATPROP(INFILE):
 	STRETCHINCR = (MAXSTRETCH - R1)/NINCR;
 	
 	#-----------------------------------------------------------------------------------
+	# For the Full Network model we nedd the string of the Integration Scheme
+	if (MODEL == 'FULL'):
+		FILE.readline().strip('\n');
+		QUADSCHEME = FILE.readline();
+	
+	#-----------------------------------------------------------------------------------
 	# Close File
 	FILE.close()
 		
-	return RPROP, MODEL, LOADTYPE, NINCR, STRETCHINCR
+	return RPROP, MODEL, LOADTYPE, NINCR, STRETCHINCR, QUADSCHEME
 	
 #****************************************************************************************	
 	
@@ -200,3 +215,81 @@ def INVLANGEVIN(X,APPROX = 'PADE'):
 		INVL = (X*( R3 - (X**R2) ) )/( R1 - (X**R2) );
 	
 	return INVL
+	
+#****************************************************************************************
+
+#======================================================================================
+""" QUAD:   
+
+Inputs:
+		NAME: String with the Quadrature Rule Desired
+		obs: The input f
+Outputs:
+		Q: Number of quadrature points;
+		DIRQUAD : Dictionary containinf quadrature nodes and weitghs
+
+"""
+
+def QUAD(NAME):
+	#-----------------------------------------------------------------------------------
+	# Declare Local Variables
+	
+	
+	# Constants
+	R0 = float(0.0); R1 = float(1.0); R2 = float(2.0); R3 = float(3.0);
+	
+	# Integers 
+	I = int(R0); Q = int(R0);
+	
+	# Scalars
+	
+	# Logicals 
+	FLAG = True
+	
+	# Dictionary
+	DIRQUAD ={};
+	
+	# Unkowns
+	DATA = [];
+	
+	#-----------------------------------------------------------------------------------
+	# Open File 
+
+	
+	FILE = open(NAME,'r');
+	
+	#-----------------------------------------------------------------------------------
+	# Start Reading the File
+	
+	# Read First Line of the file wich contain if the scheme is half-sphere based
+	KEY = FILE.readline().strip('\n')
+	
+	if 'Half' in KEY:
+		HALF = True
+	
+	while (FLAG):
+		KEY = FILE.readline().strip('\n')
+		if 'Node' in KEY:
+			FLAG = False
+			 
+	
+	# Reset Flag to true
+	FLAG = True
+	
+	while (FLAG):
+		KEY = FILE.readline().strip('\n') # Read line after line
+		if 'END' in KEY:
+			FLAG = False;
+		else:
+			DATA = KEY.split();
+			DIRQUAD[int(DATA[0])] = [float(DATA[1]),float(DATA[2]),float(DATA[3]),float(DATA[4])]
+		
+	# Close File	
+	FILE.close();
+	
+	# Number of Nodes
+	Q = len(DIRQUAD);
+	
+
+
+	return Q, DIRQUAD, HALF

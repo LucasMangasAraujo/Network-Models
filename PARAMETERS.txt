@@ -1,9 +1,11 @@
 $Everything Should be In Capital letter
 $Model Name:
-8CHAIN
+FULL
 $Load Type-UNIAXIAL, BIAXIAL, SHEAR:
-SHEAR
+UNIAXIAL
 $ Material Paramters
-0.27 26.5 1.
+0.4 50 1.
 $ Number of Increments and Target Stretch
-30 5.5
+30 5
+$ Integration Scheme (Full-Network)
+Quadrature/BO21.dat

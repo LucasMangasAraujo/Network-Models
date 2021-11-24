@@ -18,6 +18,7 @@ import STATEUPDATE as SU
         RPROPS: Material Properties Array
 		STRETCH: Chain stretch (SCALAR OR TENSOR) 
 		NSTRES: Dimensions of the stress
+		QUADSCHEME : Optional Argument informing the integration over the sphere scheme
 
 
 ******************
@@ -29,7 +30,7 @@ import STATEUPDATE as SU
 ******************
 '''
 
-def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH):	
+def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH, QUADSCHEME = ' '):	
 	#-----------------------------------------------------------------------------------
 	# Declaring Local Variables
 	
@@ -53,7 +54,8 @@ def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH):
 	elif(MODEL == '8CHAIN'):
 		# For Default, The initial end-to-end distance is equal to N^0.5*B
 		TR,T = SU.EIGHTCHAIN(LOADTYPE,RPROPS,STRETCH);
-	
+	elif(MODEL == 'FULL'):
+		TR,T = SU.FULLNETWORK(LOADTYPE,RPROPS,STRETCH,QUADSCHEME);
 	
 	return TR,T
 	

@@ -20,7 +20,7 @@ from INTERFACE import MATISU
 R0=float(0.0); R1=float(1.0);
 
 # Strings
-MODEL = str(''); LOAD = str('') 
+MODEL = str(''); LOAD = str('') ; QUADSCHEME = str('')
 
 # Integers
 I = int(0); J = int(0); NINCR = int(R0); NPROP = int(R0); NSTRES = int(R0);
@@ -43,7 +43,7 @@ RPROP = []; ETOT = []; STRETCH = [];
 INPUT = 'PARAMETERS.txt'
 
 # Call MATPROP to assemble Material Model and loading conditions
-(RPROPS,MODEL,LOADTYPE,NINCR,STRETCHINCR) = MATPROP(INPUT)
+(RPROPS,MODEL,LOADTYPE,NINCR,STRETCHINCR, QUADSCHEME) = MATPROP(INPUT)
 
 
 
@@ -87,7 +87,10 @@ DUMMYFILE.write('\n')
 # Run Loop
 for I in range(1,NINCR+1):
 	# Call State Update functions
-	TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I]);
+	if ( MODEL == 'FULL'):
+		TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I],QUADSCHEME);
+	else:
+		TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I]);
 		
 	# Print on output file
 	DUMMYFILE.write('{:2.4f} {:3.4f} {:3.4f}'.format(STRETCH[I],TR[0,0],T[0,0]))
@@ -109,7 +112,8 @@ elif (MODEL == '3CHAIN'):
 	os.system('move %s 3Chain' %OUT);
 elif (MODEL == '8CHAIN'):
 	os.system('move %s 8Chain' %OUT);
-
+elif (MODEL == 'FULL'):
+	os.system('move %s Full_Network' %OUT);
 		
 
 
