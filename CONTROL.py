@@ -36,6 +36,9 @@ T = np.zeros((3,3),float); TR = np.zeros((3,3),float);
 # Unkowns a priori
 RPROP = []; ETOT = []; STRETCH = [];
 
+# Unkwowns Dictionaries
+POLY = {}
+
 #===================================================================
 ## GET MATERIAL PROPERTIES
 
@@ -43,7 +46,7 @@ RPROP = []; ETOT = []; STRETCH = [];
 INPUT = 'PARAMETERS.txt'
 
 # Call MATPROP to assemble Material Model and loading conditions
-(RPROPS,MODEL,LOADTYPE,NINCR,STRETCHINCR, QUADSCHEME) = MATPROP(INPUT)
+(RPROPS,MODEL,LOADTYPE,NINCR,STRETCHINCR, QUADSCHEME, POLY) = MATPROP(INPUT)
 
 
 
@@ -71,11 +74,33 @@ DUMMYFILE = open('out.txt','w+')
 EXT = '.txt'; # File Extension
 
 if (LOADTYPE == 'UNIAXIAL'):
-	OUT = 'UNI' + MODEL + EXT;
+	if ('POLY' in MODEL):
+		DIS = [*POLY][0] #Ditribution name
+		OUT = 'UNI' + MODEL + '_' + DIS + EXT;
+	else:
+		OUT = 'UNI' + MODEL + EXT;
 elif (LOADTYPE == 'BIAXIAL'):
-	OUT = 'BI' + MODEL + EXT;
+	if 'POLY' in MODEL:
+		OUT = 'BI' + MODEL + '_' + DIS + EXT;
+	else:
+		OUT = 'BI' + MODEL + EXT;
 elif (LOADTYPE == 'SHEAR'):
-	OUT = 'SHEAR' + MODEL + EXT;
+	if 'POLY' in MODEL:
+		OUT = 'SHEAR' + MODEL + EXT;
+	else:
+		OUT = 'SHEAR' + MODEL + '_' + DIS + EXT;
+elif (LOADTYPE == 'COMPRESSUNI'):
+	if 'POLY' in MODEL:
+		DIS = [*POLY][0] #Ditribution name
+		OUT = 'COMPRESSUNI' + MODEL + '_' + DIS + EXT;
+	else:
+		OUT = 'COMPRESSUNI' + MODEL + EXT;
+elif (LOADTYPE == 'COMPSHEAR'):
+	if 'POLY' in MODEL:
+		DIS = [*POLY][0] #Ditribution name
+		OUT = 'COMPSHEAR' + MODEL + '_' + DIS + EXT;
+	else:
+		OUT = 'COMPSHEAR' + MODEL + EXT;
 		
 #===================================================================
 ## STATE UPDATE
@@ -87,8 +112,12 @@ DUMMYFILE.write('\n')
 # Run Loop
 for I in range(1,NINCR+1):
 	# Call State Update functions
-	if ( MODEL == 'FULL'):
-		TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I],QUADSCHEME);
+	if 'FULL' in MODEL:
+		if 'POLY' in MODEL:
+			TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I],QUADSCHEME,POLY);
+		else:
+			TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I],QUADSCHEME);
+			
 	else:
 		TR,T = MATISU(MODEL,LOADTYPE,RPROPS,STRETCH[I]);
 		
@@ -112,9 +141,15 @@ elif (MODEL == '3CHAIN'):
 	os.system('move %s 3Chain' %OUT);
 elif (MODEL == '8CHAIN'):
 	os.system('move %s 8Chain' %OUT);
-elif (MODEL == 'FULL'):
-	os.system('move %s Full_Network' %OUT);
+elif 'FULL' in MODEL:
+	if 'POLY' in MODEL:
+		os.system('move %s Polydisperse_Full_Network' %OUT);
+	else:
+		os.system('move %s Full_Network' %OUT);
 		
 
 
+#===================================================================
+## Post Processing 
 
+import matlab.engine

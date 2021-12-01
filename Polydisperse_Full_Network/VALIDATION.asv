@@ -1,0 +1,52 @@
+%% VALIDATION: Code for vizualition of the full-network result
+clear all; close all; clc;
+
+%% Open File and Ploat
+
+%  Open Files
+VSIM = load('VERRON.txt');
+SIM = load('UNIPOLYFULL_DIRAC.txt');
+UNIFORM = load('UNIPOLYFULL_UNIFORM.txt');
+EXPO = load('UNIPOLYFULL_EXPONENTIAL.txt');
+
+% Associate 
+L = VSIM(:,1); NOMS = VSIM(:,2);
+LSIM = SIM(:,1); NOMSSIM = SIM(:,2);
+LUNIFORM = UNIFORM(:,1); NOMSUNIFORM = UNIFORM(:,2);
+LEXPO = EXPO(:,1); NOMSEXPO = EXPO(:,2);
+
+%% Open data related to Itskov
+
+% Itskov data
+EXPO2 = load('COMPRESSUNIPOLYFULL.txt');
+
+%Associate
+LEXPO2 = EXPO2(:,1); NOMSEXPO2 = EXPO2(:,2);
+
+
+%% Plot
+
+figure(1)
+hold on
+plot(L, NOMS,'bo')
+plot(LSIM, NOMSSIM,'LineWidth',1.3);
+plot(LUNIFORM,NOMSUNIFORM,'LineWidth',1.3)
+plot(LEXPO,NOMSEXPO,'LineWidth',1.3)
+axis square
+xlabel('$\lambda$','FontSize',16,'Interpreter','Latex')
+ylabel('Nomimal Stress $\left[ \mathrm{MPa} \right] $','FontSize',16,'Interpreter','Latex')
+ylim([0,2.5])
+legend('Verron Result','Monodisperse','Uniform','Exponential')
+hold off
+
+figure(2)
+hold on
+plot(LEXPO2,abs(NOMSEXPO2,'LineWidth',1.3)
+axis square
+xlabel('$\lambda$','FontSize',16,'Interpreter','Latex')
+ylabel('Nomimal Stress $\left[ \mathrm{MPa} \right] $','FontSize',16,'Interpreter','Latex')
+legend('Exponential')
+hold off
+
+
+

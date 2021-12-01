@@ -6,6 +6,7 @@ import numpy as np
 from math import *
 import sys, os
 
+
 #======================================================================================
 ''' MATPROP: THIS FUNCTION ASSEMBLE ARRAY OR SCALAR CARRYING THE MATERIAL PROPERTIES
 
@@ -34,8 +35,11 @@ def MATPROP(INFILE):
 	# Integers
 	I = int()
 	
-	# Unkowns
-	RPROP = []; DATA = [];
+	# Unkowns aRRAYS
+	RPROP = []; DATA = []; 
+	
+	# Unkowns Dictionaries
+	POLY = {};
 	
 	#-----------------------------------------------------------------------------------
 	# Start Reading Input File
@@ -70,7 +74,7 @@ def MATPROP(INFILE):
 		RPROP = np.zeros((len(DATA),),float)
 		for I in range(0,len(DATA)):
 			RPROP[I] = float(DATA[I]);
-	elif(MODEL == 'FULL'): # Full-Network Model
+	elif 'FULL' in MODEL: # Full-Network Model
 		RPROP = np.zeros((len(DATA),),float)
 		for I in range(0,len(DATA)):
 			RPROP[I] = float(DATA[I]);
@@ -86,18 +90,24 @@ def MATPROP(INFILE):
 	
 	#-----------------------------------------------------------------------------------
 	# For the Full Network model we nedd the string of the Integration Scheme
-	if (MODEL == 'FULL'):
+	if 'FULL' in MODEL:
 		FILE.readline().strip('\n');
-		QUADSCHEME = FILE.readline();
+		QUADSCHEME = FILE.readline().strip('\n');
+	
+	#-----------------------------------------------------------------------------------
+	# If polydispesity is considered then extract statistical features
+	FILE.readline().strip('\n');
+	if 'POLY' in MODEL:
+		DATA = FILE.readline().split(); 
+		POLY[DATA[0]] = [float(DATA[1]),float(DATA[2]),float(DATA[3])] 
 	
 	#-----------------------------------------------------------------------------------
 	# Close File
 	FILE.close()
 		
-	return RPROP, MODEL, LOADTYPE, NINCR, STRETCHINCR, QUADSCHEME
+	return RPROP, MODEL, LOADTYPE, NINCR, STRETCHINCR, QUADSCHEME, POLY
 	
-#****************************************************************************************	
-	
+
 
 #======================================================================================
 """ DEFGRAD: ASSEMBLE THE DEFORMATION GRADIENT BASED ON THE TYPE LOADING
@@ -126,13 +136,13 @@ def DEFGRAD(LOADTYPE,STRETCH):
 	
 	F[0,0]=STRETCH; # Equal in all cases
 	
-	if (LOADTYPE == 'UNIAXIAL'):
+	if (LOADTYPE == 'UNIAXIAL') or (LOADTYPE == 'COMPRESSUNI'):
 		F[1,1] = R1/sqrt(F[0,0]);
 		F[2,2] = F[1,1];
 	elif (LOADTYPE == 'BIAXIAL'):
 		F[1,1] = F[0,0];
 		F[2,2] = R1/(F[0,0]**R2)
-	elif (LOADTYPE == 'SHEAR'):
+	elif (LOADTYPE == 'SHEAR') or (LOADTYPE == 'COMPSHEAR') :
 		F[1,1] = R1;
 		F[2,2] = R1/F[0,0];
 		
@@ -266,6 +276,8 @@ def QUAD(NAME):
 	
 	if 'Half' in KEY:
 		HALF = True
+	else:
+		HALF = False
 	
 	while (FLAG):
 		KEY = FILE.readline().strip('\n')
@@ -293,3 +305,48 @@ def QUAD(NAME):
 
 
 	return Q, DIRQUAD, HALF
+	
+#****************************************************************************************
+
+#======================================================================================
+""" POLYDISPERSE: This function compute statistical information of a given distribution
+
+Inputs:
+		NAME: String that is the key of the dictionary POLY and also the type of distribuiton
+		POLY: Dictionary containing main parameters of the distribution
+Outputs:
+		SUM: SUM from N_0 to Infinity of a given distributoin
+
+"""
+
+def POLYDISPERSE(NAME,POLY):
+	#-----------------------------------------------------------------------------------
+	# Declare Local Variables
+	
+	# Constants
+	R0 = float(0.0); R1 = float(1.0); R2 = float(2.0); R3 = float(3.0);
+	
+	# Integers 
+	I = int(R0);
+	
+	# Scalars
+	SUM = R0;
+	
+	# Arrays
+	PAR = []
+	
+	#-----------------------------------------------------------------------------------
+	# Get information from the distribution
+	if (NAME == 'EXPONENTIAL'):
+		PAR = POLY[NAME]; # Parametrers of the Distribution
+		SUM = PAR[0] + PAR[1]; # Mean of the exponential distribution]
+	elif (NAME == 'NORMAL'): 
+		PAR = POLY[NAME]; # Parametrers of the Distribution
+	elif (NAME == 'DIRAC'):
+		PAR = POLY[NAME]; # Parametrers of the Distribution
+		SUM = PAR[0]; # Dirac Distribution peak 
+	elif (NAME == 'UNIFORM'):
+		PAR = POLY[NAME];
+		SUM = (PAR[0] + PAR[1])/R2
+
+	return SUM

@@ -19,18 +19,20 @@ import STATEUPDATE as SU
 		STRETCH: Chain stretch (SCALAR OR TENSOR) 
 		NSTRES: Dimensions of the stress
 		QUADSCHEME : Optional Argument informing the integration over the sphere scheme
-
+		POLY : Dictionary with information of the length distribution used
+		RMSFLAG: Randon Walk rms value flag
 
 ******************
 
  Outputs:
- 		STRES: NOMINAL STRESS
+ 		TR: NOMINAL STRESS
+		T: Cauchy Stress
   			
  
 ******************
 '''
 
-def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH, QUADSCHEME = ' '):	
+def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH, QUADSCHEME = ' ', POLY = {}, RMSFLAG = True):	
 	#-----------------------------------------------------------------------------------
 	# Declaring Local Variables
 	
@@ -54,8 +56,13 @@ def MATISU(MODEL,LOADTYPE,RPROPS,STRETCH, QUADSCHEME = ' '):
 	elif(MODEL == '8CHAIN'):
 		# For Default, The initial end-to-end distance is equal to N^0.5*B
 		TR,T = SU.EIGHTCHAIN(LOADTYPE,RPROPS,STRETCH);
-	elif(MODEL == 'FULL'):
-		TR,T = SU.FULLNETWORK(LOADTYPE,RPROPS,STRETCH,QUADSCHEME);
+	elif 'FULL' in MODEL:
+		if 'POLY' in MODEL:
+			# For Default, The initial end-to-end distance is equal to N^0.5*B
+			TR,T = SU.POLYFULL(LOADTYPE,RPROPS,STRETCH,QUADSCHEME,POLY,RMSFLAG);
+		else:
+			# For Default, The initial end-to-end distance is equal to N^0.5*B
+			TR,T = SU.FULLNETWORK(LOADTYPE,RPROPS,STRETCH,QUADSCHEME);
 	
 	return TR,T
 	
